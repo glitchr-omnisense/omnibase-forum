@@ -92,3 +92,7 @@ Likes and follows reuse base-bundle's `/api/thread/{slug}/{like,unlike,follow,un
 base-bundle-admin is a requirement, not an option: base-bundle walks every class of an extension's `src/` when it builds its `App\` aliases, so CRUD controllers extending an admin class that is not installed would take the whole application down. With it, `Base\Forum\Controller\Admin\Crud\{Category,Topic}CrudController`
 register themselves; link them from the dashboard with
 `MenuItem::linkToCrud(\Base\Forum\Entity\Category::class, ...)`.
+
+## License
+
+MIT since 2026-10-09; earlier versions remain published under LGPL-3.0-or-later.
