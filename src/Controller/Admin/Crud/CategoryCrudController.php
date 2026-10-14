@@ -39,16 +39,16 @@ class CategoryCrudController extends AbstractCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TextField::new('title')->setColumns(6);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
-        yield AssociationField::new('parent')->setColumns(6);
+        yield SlugField::new('slug')->setTargetFieldName('title')->setColumns(6)->hideOnIndex();
+        yield AssociationField::new('parent')->setRequired(false)->setColumns(6);
         yield NumberField::new('position')->setColumns(3);
         yield BooleanField::new('locked')->setColumns(3);
         // An announcement board: it and its topics wear the megaphone badge, and the feed heads with them.
         yield BooleanField::new('announcement')->setColumns(3);
         // Whether a topic opened in the board may carry a poll.
         yield BooleanField::new('polls', 'Sondages')->setColumns(3);
-        yield IconField::new('icon')->setColumns(6)->hideOnIndex();
-        yield ColorPickerField::new('color')->setColumns(3)->hideOnIndex();
+        yield IconField::new('icon')->setRequired(false)->setColumns(6)->hideOnIndex();
+        yield ColorPickerField::new('color')->setRequired(false)->setColumns(3)->hideOnIndex();
         /*
          * The rank a board is reserved to, or none: anyone reads it. A plain
          * nullable string, not a roles column - RoleType guesses its choices
@@ -61,6 +61,6 @@ class CategoryCrudController extends AbstractCrudController
         $requiredRole = RoleField::new('requiredRole');
         $roles = $requiredRole->getAsDto()->getCustomOption(SelectField::OPTION_ENUM_CLASS);
         yield $requiredRole->setChoices($roles::getPermittedValues())->setRequired(false)->setColumns(3)->hideOnIndex();
-        yield TextareaField::new('description')->hideOnIndex();
+        yield TextareaField::new('description')->setRequired(false)->hideOnIndex();
     }
 }

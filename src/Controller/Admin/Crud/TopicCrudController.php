@@ -35,7 +35,7 @@ class TopicCrudController extends AbstractCrudController
     {
         yield IdField::new('id')->onlyOnIndex();
         yield TranslationField::new()->setFields(['title' => []]);
-        yield SlugField::new('slug')->setColumns(6)->hideOnIndex();
+        yield SlugField::new('slug')->setTargetFieldName('translations.title')->setColumns(6)->hideOnIndex();
         yield AssociationField::new('category')->setColumns(6);
         // A choice among the tags, several at once: AssociationField embeds ONE related entity's
         // own fields (Tag's slug...), and fed the collection it rendered it into a text box.
