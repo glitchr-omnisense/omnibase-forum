@@ -81,9 +81,11 @@ The moderators are exempt from the flood interval.
 {% endif %}
 ```
 
-> [!WARNING]
-> Known defect: the tag page (`/bbs/t/{slug}`) and the search
-> (`/bbs/recherche`) list the topics of every board, a board kept for a role
-> included: their titles, boards and last posters show to a reader who may not
-> open them (`TopicRepository::createTagQuery()`, `createSearchQuery()`). The
-> index's feed and the sitemap leave those boards out.
+## Lists outside a board
+
+The index's feed, the tag page (`/bbs/t/{slug}`), the search (`/bbs/recherche`) and
+the sitemap list only the topics of the boards the reader may read (`FORUM_READ`):
+a board kept for a role never shows its titles, its name or its last posters to
+someone without it. `TopicRepository::createLatestQuery()`, `createTrendingQuery()`,
+`createTagQuery()` and `createSearchQuery()` take the readable boards' ids (null:
+every board), the controller passing those `FORUM_READ` grants.
