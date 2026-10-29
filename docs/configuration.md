@@ -44,15 +44,10 @@ forum:
 | `flood_interval` | integer, at least 0 | 15 | opening a topic, replying; 0 turns it off |
 | `hot_threshold` | integer, at least 1 | 25 | `forum_is_hot()`, the badges, the boards holding a popular topic |
 | `active_hours` | integer, at least 1 | 72 | `forum_is_active()`, the badges, the legend |
-| `title_max_length` | integer, at least 10 | 120 | nothing |
-| `content_max_length` | integer, at least 100 | 20000 | nothing |
+| `title_max_length` | integer, at least 10 | 120 | `TopicType`: the title's constraint and `maxlength` |
+| `content_max_length` | integer, at least 100 | 20000 | `TopicType` and `PostType`: the post's constraint |
 | `moderator_role` | string | `ROLE_ADMIN` | `ForumVoter` |
 | `admin_role` | string | `ROLE_SUPER_ADMIN` | `ForumVoter` (`FORUM_ADMIN`, the moderation of everything, the announcement boards) |
-
-> [!WARNING]
-> Known defect: `title_max_length` and `content_max_length` are read by
-> nothing: the forms keep 120 characters for a title and 20,000 for a post
-> whatever they say (`Form/Model/TopicModel.php`, `Form/Model/PostModel.php`).
 
 ## Parameters
 

@@ -51,6 +51,4 @@ yield MenuItem::linkToCrud(\Base\Forum\Entity\Topic::class, 'Topics', 'fa-solid 
 yield MenuItem::linkToRoute('forum_admin_order', [], 'Order', 'fa-solid fa-sort');
 ```
 
-> [!WARNING]
-> Known defect: the categories screen labels the `polls` field "Sondages"
-> in every locale (`src/Controller/Admin/Crud/CategoryCrudController.php:49`).
+The categories screen labels the `polls` field in the reader's language (`form.board_polls`).

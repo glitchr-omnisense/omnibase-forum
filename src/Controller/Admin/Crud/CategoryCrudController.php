@@ -2,6 +2,7 @@
 
 namespace Base\Forum\Controller\Admin\Crud;
 
+use Symfony\Component\Translation\TranslatableMessage;
 use Base\Admin\Controller\AbstractCrudController;
 use Base\Admin\Filter\Filters;
 use Base\Field\AssociationField;
@@ -46,7 +47,7 @@ class CategoryCrudController extends AbstractCrudController
         // An announcement board: it and its topics wear the megaphone badge, and the feed heads with them.
         yield BooleanField::new('announcement')->setColumns(3);
         // Whether a topic opened in the board may carry a poll.
-        yield BooleanField::new('polls', 'Sondages')->setColumns(3);
+        yield BooleanField::new('polls', new TranslatableMessage('form.board_polls', [], 'forum'))->setColumns(3);
         yield IconField::new('icon')->setRequired(false)->setColumns(6)->hideOnIndex();
         yield ColorPickerField::new('color')->setRequired(false)->setColumns(3)->hideOnIndex();
         /*

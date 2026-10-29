@@ -78,4 +78,17 @@ class MarkdownRendererTest extends TestCase
         $this->assertStringContainsString('@Carol', $quote);
         $this->assertStringContainsString("> first\n> second", $quote);
     }
+
+    /** The author's line of a quote is in the reader's language (forum: reply.quote_wrote), not French whatever the locale. */
+    public function testTheQuotesAuthorLineIsInTheReadersLanguage(): void
+    {
+        foreach (['en' => '> **@Carol** wrote:', 'fr' => '> **@Carol** a écrit :'] as $locale => $line) {
+            $translator = new \Symfony\Component\Translation\Translator($locale);
+            $translator->addLoader('yaml', new \Symfony\Component\Translation\Loader\YamlFileLoader());
+            $translator->addResource('yaml', __DIR__.'/../../translations/forum+intl-icu.'.$locale.'.yaml', $locale, 'forum+intl-icu');
+            $quote = (new MarkdownRenderer(null, $translator))->quote('first', 'Carol');
+            $this->assertStringStartsWith($line."\n", $quote, $locale);
+        }
+        $this->assertStringStartsWith("> **@Carol** wrote:\n", $this->renderer->quote('first', 'Carol'), 'without a translator');
+    }
 }

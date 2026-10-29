@@ -60,9 +60,9 @@ The excerpt decodes the entities after removing the tags, so the escaped
 `<script>` comes back as text: it is plain text, to be printed escaped (the
 `forum_excerpt` filter is not marked safe, so Twig escapes it).
 
-> [!WARNING]
-> Known defect: `quote()` writes the author's line in French ("a écrit :")
-> whatever the locale (`src/Service/MarkdownRenderer.php:59`).
+`quote()` writes the author's line in the reader's language (`reply.quote_wrote` of the
+`forum` domain: "**@author** wrote:", "**@author** a écrit :"); built without a translator,
+in English.
 
 ## In Twig
 

@@ -3,9 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
-
-- The tag page and the search list only the topics of the boards the reader may read, as the
-  index's feed and the sitemap do: a board kept for a role (`Category::$requiredRole`) showed its
-  topics' titles, its name and their last posters to anyone. `TopicRepository::createTagQuery()`
-  and `createSearchQuery()` take the readable boards' ids (null: every board, as before). Test:
-  tests/Controller/RestrictedBoardsTest.php.
+- `forum.title_max_length` and `forum.content_max_length` bound the title and the post: the new
+  topic and reply forms take their longest from them (`TopicType`, `PostType`); `TopicModel` and
+  `PostModel` hard-coded 120 and 20000 whatever the options.
+- A quote's author line is in the reader's language (`reply.quote_wrote`), not "a écrit :"
+  whatever the locale.
+- The categories screen labels the `polls` field in the reader's language, not "Sondages".
+- README: omnisense/omnibase and its GitHub address in place of base-bundle on the abandoned
+  gitlab.glitchr.dev; the demo image named omnibase-forum-demo.

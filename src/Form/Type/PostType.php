@@ -6,11 +6,17 @@ use Base\Forum\Form\Model\PostModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 
 /** A reply, or the edit of one - just the Markdown body (see PostModel). */
 class PostType extends AbstractType
 {
+    public function __construct(#[Autowire('%forum.content_max_length%')] private readonly int $contentMaxLength = 20000)
+    {
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -31,6 +37,7 @@ class PostType extends AbstractType
             'label' => '@forum.form.reply',
             'attr' => ['rows' => 8, 'placeholder' => '@forum.form.reply_placeholder', 'data-forum-editor' => ''],
             'help' => '@forum.form.markdown_help',
+            'constraints' => [new Length(max: $this->contentMaxLength, maxMessage: '@forum.post.content.long')],
         ]);
     }
 }

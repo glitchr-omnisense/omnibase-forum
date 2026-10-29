@@ -139,6 +139,7 @@ reply:
   title: "Reply"
   send: "Send"
   in_reply_to: "In reply to post #{number}"
+  quote_wrote: "{author} wrote:"
 
 moderate:
   pin: "Pin"

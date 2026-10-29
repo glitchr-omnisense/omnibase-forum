@@ -15,7 +15,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class TopicModel
 {
     #[Assert\NotBlank(message: '@forum.topic.title.blank')]
-    #[Assert\Length(min: 3, max: 120, minMessage: '@forum.topic.title.short', maxMessage: '@forum.topic.title.long')]
+    #[Assert\Length(min: 3, minMessage: '@forum.topic.title.short')] // the longest: forum.title_max_length (TopicType)
     public ?string $title = null;
 
     #[Assert\NotNull(message: '@forum.topic.category.blank')]
@@ -25,7 +25,7 @@ class TopicModel
     public iterable $tags = [];
 
     #[Assert\NotBlank(message: '@forum.post.content.blank')]
-    #[Assert\Length(min: 2, max: 20000, minMessage: '@forum.post.content.short', maxMessage: '@forum.post.content.long')]
+    #[Assert\Length(min: 2, minMessage: '@forum.post.content.short')] // the longest: forum.content_max_length (TopicType)
     public ?string $content = null;
 
     /** A poll is optional: no question, no poll. */
