@@ -140,6 +140,7 @@ reply:
   title: "Répondre"
   send: "Envoyer"
   in_reply_to: "En réponse au message #{number}"
+  quote_wrote: "{author} a écrit :"
 
 moderate:
   pin: "Épingler"

@@ -2,6 +2,7 @@
 
 namespace Base\Forum\Service;
 
+use Symfony\Contracts\Translation\TranslatorInterface;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Autolink\AutolinkExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
@@ -25,7 +26,7 @@ class MarkdownRenderer
 {
     private ?MarkdownConverter $converter = null;
 
-    public function __construct(private readonly ?RouterInterface $router = null)
+    public function __construct(private readonly ?RouterInterface $router = null, private readonly ?TranslatorInterface $translator = null)
     {
     }
 
@@ -56,7 +57,10 @@ class MarkdownRenderer
         $lines = preg_split('/\R/u', trim((string) $markdown)) ?: [];
         $quoted = implode("\n", array_map(fn ($l) => '> ' . $l, $lines));
 
-        return ($author ? '> **@' . $author . '** a écrit :' . "\n" : '') . $quoted . "\n\n";
+        // "@author wrote:" in the reader's language (forum: reply.quote_wrote); English without a translator.
+        $wrote = $this->translator?->trans('reply.quote_wrote', ['author' => '**@' . $author . '**'], 'forum') ?? '**@' . $author . '** wrote:';
+
+        return ($author ? '> ' . $wrote . "\n" : '') . $quoted . "\n\n";
     }
 
     private function converter(): MarkdownConverter

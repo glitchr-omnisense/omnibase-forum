@@ -14,10 +14,18 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 
 class TopicType extends AbstractType
 {
+    public function __construct(
+        #[Autowire('%forum.title_max_length%')] private readonly int $titleMaxLength = 120,
+        #[Autowire('%forum.content_max_length%')] private readonly int $contentMaxLength = 20000,
+    ) {
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -72,7 +80,8 @@ class TopicType extends AbstractType
         $builder
             ->add('title', TextType::class, [
                 'label' => '@forum.form.title',
-                'attr' => ['maxlength' => 120, 'placeholder' => '@forum.form.title_placeholder', 'autocomplete' => 'off'],
+                'attr' => ['maxlength' => $this->titleMaxLength, 'placeholder' => '@forum.form.title_placeholder', 'autocomplete' => 'off'],
+                'constraints' => [new Length(max: $this->titleMaxLength, maxMessage: '@forum.topic.title.long')],
             ])
             ->add('tags', EntityType::class, [
                 'label' => '@forum.form.tags',
@@ -91,6 +100,7 @@ class TopicType extends AbstractType
                 'label' => '@forum.form.content',
                 'attr' => ['rows' => 12, 'placeholder' => '@forum.form.content_placeholder', 'data-forum-editor' => ''],
                 'help' => '@forum.form.markdown_help',
+                'constraints' => [new Length(max: $this->contentMaxLength, maxMessage: '@forum.post.content.long')],
             ]);
 
             // The poll, only when the topic is opened: its answers are never

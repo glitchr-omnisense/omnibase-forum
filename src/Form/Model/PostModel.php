@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class PostModel
 {
     #[Assert\NotBlank(message: '@forum.post.content.blank')]
-    #[Assert\Length(min: 2, max: 20000, minMessage: '@forum.post.content.short', maxMessage: '@forum.post.content.long')]
+    #[Assert\Length(min: 2, minMessage: '@forum.post.content.short')] // the longest: forum.content_max_length (PostType)
     public ?string $content = null;
 
     public ?int $replyTo = null;
