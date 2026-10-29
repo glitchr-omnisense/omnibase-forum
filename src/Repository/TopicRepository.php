@@ -63,12 +63,28 @@ class TopicRepository extends ThreadRepository
             ->getQuery();
     }
 
-    public function createTagQuery(Tag $tag): Query
+    /**
+     * A tag's topics, of the readable boards only (the caller passes them, as for
+     * createLatestQuery(); null: every board's).
+     *
+     * @param int[]|null $readableCategoryIds
+     */
+    public function createTagQuery(Tag $tag, ?array $readableCategoryIds = null): Query
     {
-        return $this->createListQueryBuilder()
+        return $this->whereReadable($this->createListQueryBuilder(), $readableCategoryIds)
             ->innerJoin('t.tags', 'tag')
             ->andWhere('tag = :tag')->setParameter('tag', $tag)
             ->getQuery();
+    }
+
+    /** @param int[]|null $readableCategoryIds */
+    private function whereReadable(QueryBuilder $qb, ?array $readableCategoryIds): QueryBuilder
+    {
+        if (null !== $readableCategoryIds) {
+            $qb->andWhere('c.id IN (:ids)')->setParameter('ids', $readableCategoryIds ?: [0]);
+        }
+
+        return $qb;
     }
 
     /**
@@ -168,13 +184,15 @@ class TopicRepository extends ThreadRepository
     /**
      * Plain title/content search: a LIKE over the topic title and its posts.
      * Small forums do not need an index; when the site wants Typesense, the
-     * Topic entity is where a mapping goes.
+     * Topic entity is where a mapping goes. Readable boards only, as createTagQuery().
+     *
+     * @param int[]|null $readableCategoryIds
      */
-    public function createSearchQuery(string $term): Query
+    public function createSearchQuery(string $term, ?array $readableCategoryIds = null): Query
     {
         $like = '%' . mb_strtolower(trim($term)) . '%';
 
-        return $this->createListQueryBuilder()
+        return $this->whereReadable($this->createListQueryBuilder(), $readableCategoryIds)
             ->leftJoin('t.translations', 'i')
             ->leftJoin('t.posts', 'p')
             ->andWhere('LOWER(i.title) LIKE :term OR LOWER(p.content) LIKE :term')

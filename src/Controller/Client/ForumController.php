@@ -255,6 +255,26 @@ class ForumController extends AbstractController
         ]);
     }
 
+    /**
+     * The boards the visitor may read (ForumVoter::READ), as the index's feed filters them: a
+     * list of topics outside a board (a tag, a search) never shows a private board's titles.
+     *
+     * @return int[]
+     */
+    private function readableBoards(): array
+    {
+        $readable = [];
+        foreach ($this->categories->findTree() as $group) {
+            foreach ($group->getChildren() as $board) {
+                if ($this->isGranted(ForumVoter::READ, $board)) {
+                    $readable[] = $board->getId();
+                }
+            }
+        }
+
+        return $readable;
+    }
+
     #[Route('/bbs/t/{slug}', name: 'forum_tag')]
     public function Tag(Request $request, string $slug): Response
     {
@@ -263,7 +283,7 @@ class ForumController extends AbstractController
             throw $this->createNotFoundException('Unknown tag.');
         }
 
-        $topics = $this->paginator->paginate($this->topics->createTagQuery($tag), $request->query->getInt('page', 1), $this->topicsPerPage);
+        $topics = $this->paginator->paginate($this->topics->createTagQuery($tag, $this->readableBoards()), $request->query->getInt('page', 1), $this->topicsPerPage);
         if ($rows = $this->streamRows($request, $topics, true)) {
             return $rows;
         }
@@ -282,7 +302,7 @@ class ForumController extends AbstractController
         $topics = null;
 
         if (mb_strlen($term) >= 3) {
-            $topics = $this->paginator->paginate($this->topics->createSearchQuery($term), $request->query->getInt('page', 1), $this->topicsPerPage);
+            $topics = $this->paginator->paginate($this->topics->createSearchQuery($term, $this->readableBoards()), $request->query->getInt('page', 1), $this->topicsPerPage);
             if ($rows = $this->streamRows($request, $topics, true)) {
                 return $rows;
             }
