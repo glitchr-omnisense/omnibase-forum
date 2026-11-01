@@ -2,6 +2,7 @@
 
 namespace Base\Forum\Entity;
 
+use Base\Contract\Link;
 use Base\Database\Attribute\Slugify;
 use Base\Database\Attribute\Timestamp;
 use Base\Forum\Repository\CategoryRepository;
@@ -121,7 +122,7 @@ class Category implements LinkableInterface, IconizeInterface
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        return $this->getRouter()->generate('forum_category', array_merge($routeParameters, ['slug' => $this->slug]), $referenceType);
+        return Link::to('forum_category', array_merge($routeParameters, ['slug' => $this->slug]), $referenceType);
     }
 
     public function getId(): ?int { return $this->id; }

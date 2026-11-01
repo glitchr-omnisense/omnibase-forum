@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+- `Category` and `Topic::__toLink()` link through `Base\Contract\Link::to()` (the Urls contract; the same address under
+  Symfony, in the core 3.x and 4.x) instead of BaseTrait's `getRouter()->generate()`, which the
+  core deprecates since BaseTrait names contracts only (omnisense/omnibase 4.x, step F2f).
+
 ### Fixed
 - `forum.title_max_length` and `forum.content_max_length` bound the title and the post: the new
   topic and reply forms take their longest from them (`TopicType`, `PostType`); `TopicModel` and

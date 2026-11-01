@@ -2,6 +2,7 @@
 
 namespace Base\Forum\Entity;
 
+use Base\Contract\Link;
 use App\Entity\User;
 use Base\Database\Attribute\DiscriminatorEntry;
 use Base\Entity\Thread;
@@ -132,7 +133,7 @@ class Topic extends Thread implements LinkableInterface
 
     public function __toLink(array $routeParameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): ?string
     {
-        return $this->getRouter()->generate('forum_topic', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
+        return Link::to('forum_topic', array_merge($routeParameters, ['slug' => $this->getSlug()]), $referenceType);
     }
 
     public function getCategory(): ?Category { return $this->category; }
