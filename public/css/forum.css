@@ -108,7 +108,7 @@
 .forum-avatar-sm { width: 32px; height: 32px; font-size: 14px; }
 .forum-avatar-md { width: 64px; height: 64px; font-size: 24px; }
 /* The member beside their message: a square, not a disc, and big enough to
-   show a whole figure where a site draws its members (a site's own figure sits
+   show a whole figure where a site draws its members (that figure then sits
    on the boards). Both styles use it - see _post.html.twig. */
 .forum-avatar-lg { --forum-avatar-w: 95px; --forum-avatar-h: 90px; width: var(--forum-avatar-w); height: var(--forum-avatar-h); border-radius: 12px; font-size: 32px; }
 .forum-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -247,7 +247,7 @@
 /* ── the pager (_pager.html.twig) ─────────────────────────────────────────
    The 2004 row - « ‹ 1 2 3 4 › » - on a card of its own inside the page, so
    it reads as part of the list and not as bare boxes loose on the site's
-   blue. Plain anchors, no <ul>: a host styling `nav ul` (a site's sets
+   blue. Plain anchors, no <ul>: a host styling `nav ul` (one site's layout sets
    flex-direction: column) stood the numbers on end, one per line. Every step
    is a 40px square - what a finger needs - and the row wraps when the pages
    are many. It replaces base-bundle's .pagination, which no forum page

@@ -24,7 +24,7 @@
  *   - the pager steps aside.
  *
  * Started for the list on the page and started over for the next one: a site
- * that swaps pages in place (a page-swapping script) keeps this loaded.
+ * that swaps pages in place (transparent.js, for one) keeps this loaded.
  * Such a site also runs the script again when a page brings its <script> back:
  * the first copy stays the only one, a later run only asks it to look again -
  * two copies each streamed the same list.

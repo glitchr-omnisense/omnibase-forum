@@ -22,7 +22,7 @@
     /*
      * Started for the topic on the page, and started over for the next one.
      *
-     * A site that swaps its pages in place (a page-swapping script)
+     * A site that swaps its pages in place (transparent.js, for one)
      * keeps this script loaded from one page of a topic to the next, and
      * from one topic to another. Started once, it kept the first page's
      * posts, page number and handlers: on page 3, reached from page 1 by the

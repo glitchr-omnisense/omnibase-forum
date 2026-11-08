@@ -6,7 +6,7 @@
  *   - "Sauter vers", the board jump at the foot of a topic;
  *   - a message edited where it is, in its topic ("Modifier").
  *
- * A site that swaps pages in place (a page-swapping script) brings new
+ * A site that swaps pages in place (transparent.js, for one) brings new
  * buttons and editors without a new document, and runs this script again when
  * a page brings its <script> back. So: one copy only - a later run asks the
  * first to look again; the document-wide listeners are added once; and each
@@ -122,7 +122,7 @@
      * so the rules, the token and the errors are the server's and nothing here
      * duplicates them. Saved, the server answers with the topic (it redirects to
      * the message), and the message's body is swapped for its new one - the
-     * author's column is left as it is, so their chibi is not drawn again.
+     * author's column is left as it is, so their figure is not drawn again.
      *
      * On window, capturing: a page-swapping script (transparent.js)
      * listens on the document, and would take the click, or the form, somewhere

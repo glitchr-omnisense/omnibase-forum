@@ -3,7 +3,7 @@
  * boards away, the way the 2004 BBS did (index_body_cat_close / _open). What
  * is folded is remembered in the browser, per group, and nothing else.
  *
- * A site that swaps pages in place (a page-swapping script) brings the
+ * A site that swaps pages in place (transparent.js, for one) brings the
  * index back without a new document, and runs this script again with it: one
  * copy only, and each toggle marked once it is wired - wired twice, a click
  * folded the group and unfolded it again.
