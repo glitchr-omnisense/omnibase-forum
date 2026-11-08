@@ -2,7 +2,7 @@
 
 namespace Base\Forum\Repository;
 
-use Base\Database\Repository\ServiceEntityRepository;
+use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
 use Base\Forum\Entity\Category;
 
 /**

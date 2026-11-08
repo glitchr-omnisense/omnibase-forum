@@ -5,7 +5,7 @@ namespace Base\Forum\Form\Type;
 use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
 use Base\Forum\Form\Model\TopicModel;
-use Base\Field\Type\SelectType;
+use Omnibridge\Symfony\Omnibase\Field\Type\SelectType;
 use Base\Forum\Repository\CategoryRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;

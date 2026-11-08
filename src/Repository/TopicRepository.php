@@ -5,7 +5,7 @@ namespace Base\Forum\Repository;
 use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
 use Base\Forum\Entity\Topic;
-use Base\Repository\ThreadRepository;
+use Omnibridge\Doctrine\Omnibase\Repository\ThreadRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 
