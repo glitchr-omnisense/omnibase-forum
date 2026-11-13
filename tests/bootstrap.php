@@ -34,6 +34,12 @@ foreach ($candidates as $candidate) {
             array_push($required, ...array_keys(($composer($sibling)['require'] ?? []) + ($composer($sibling)['suggest'] ?? [])));
         }
 
+        // Outside a host application (the package installed alone, as its CI does) there is no App\Entity\User:
+        // the core's Base\Entity\User stands in for it, as a site's own User extends it.
+        if (!class_exists('App\Entity\User') && class_exists('Base\Entity\User')) {
+            class_alias('Base\Entity\User', 'App\Entity\User');
+        }
+
         return;
     }
 }
