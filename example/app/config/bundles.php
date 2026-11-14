@@ -15,7 +15,7 @@ return [
     HWI\Bundle\OAuthBundle\HWIOAuthBundle::class => ['all' => true],
     Symfony\WebpackEncoreBundle\WebpackEncoreBundle::class => ['all' => true],
     Google\GoogleBundle::class => ['all' => true],
-    Base\BaseBundle::class => ['all' => true],
+    Omnibridge\Symfony\Omnibase\BaseBundle::class => ['all' => true],
     // The forum ships admin CRUD controllers for its boards and topics, so it
     // requires base-bundle-admin: registered here even though the demo opens
     // no backoffice.

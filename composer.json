@@ -29,8 +29,8 @@
     "require": {
         "php": "^8.2",
         "doctrine/orm": "^2.15|^3.0",
-        "omnibridge/symfony": "^1.1",
-        "omnisense/omnibase": "^5.1",
+        "omnibridge/symfony": "^1.1 || ^2.0",
+        "omnisense/omnibase": "^5.1 || ^6.0",
         "omnibase/admin": "^1.0",
         "league/commonmark": "^2.4",
         "symfony/config": "^6.0|^7.0|^8.0",
