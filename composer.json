@@ -29,9 +29,9 @@
     "require": {
         "php": "^8.2",
         "doctrine/orm": "^2.15|^3.0",
-        "omnibridge/symfony": "^1.0",
-        "omnisense/omnibase": "^1.0",
-        "omnibase/admin": "^1.0",
+        "omnibridge/symfony": "^3.0",
+        "omnisense/omnibase": "^7.0",
+        "omnibase/admin": "^2.0",
         "league/commonmark": "^2.4",
         "symfony/config": "^6.0|^7.0|^8.0",
         "symfony/dependency-injection": "^6.0|^7.0|^8.0",
@@ -40,8 +40,8 @@
         "symfony/security-bundle": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
-        "omnibridge/doctrine": "^1.0",
-        "omnibridge/eloquent": "^1.0",
+        "omnibridge/doctrine": "^3.0",
+        "omnibridge/eloquent": "^2.0",
         "phpunit/phpunit": "^9.6",
         "symfony/framework-bundle": "^6.0|^7.0|^8.0",
         "symfony/twig-bundle": "^6.0|^7.0|^8.0",
@@ -63,7 +63,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "1.x-dev"
+            "dev-main": "2.x-dev"
         }
     }
 }

@@ -9,7 +9,7 @@ order: 10
 
 - PHP 8.2 or later;
 - doctrine/orm 2.15 or 3;
-- omnisense/omnibase 5.1 or later (5.x), omnibridge/symfony 1.1 or later, omnibase/admin;
+- omnisense/omnibase 7.0 or later (7.x), omnibridge/symfony 3.0 or later, omnibase/admin;
 - league/commonmark 2.4 or later;
 - Symfony 6, 7 or 8 (config, dependency-injection, form, http-kernel,
   security-bundle);
