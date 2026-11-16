@@ -2,7 +2,11 @@
 
 namespace Base\Forum\Repository;
 
-use Omnibridge\Doctrine\Omnibase\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\ServiceEntityRepository;
+use Base\Database\Repository\Finder\Criterion;
+use Base\Database\Repository\Finder\Group;
+use Base\Database\Repository\Finder\Key;
+use Base\Database\Repository\Finder\Parser;
 use Base\Forum\Entity\Category;
 
 /**
@@ -21,22 +25,40 @@ class CategoryRepository extends ServiceEntityRepository
      */
     public function findTree(): array
     {
-        $all = $this->createQueryBuilder('c')
-            ->leftJoin('c.parent', 'p')->addSelect('p')
-            ->orderBy('c.position', \SortDirection::Ascending)->addOrderBy('c.title', \SortDirection::Ascending)
-            ->getQuery()->getResult();
+        $all = $this->findBy([], ['position' => 'ASC', 'title' => 'ASC']);
 
         return array_values(array_filter($all, fn (Category $c) => $c->isGroup()));
     }
 
-    /** @return Category[] the boards (leaves) topics can be posted in */
+    /** @return Category[] the boards (leaves) topics can be posted in, by their group's position then their own */
     public function findBoards(): array
     {
-        return $this->createQueryBuilder('c')
-            ->innerJoin('c.parent', 'p')->addSelect('p')
-            ->orderBy('p.position', \SortDirection::Ascending)->addOrderBy('c.position', \SortDirection::Ascending)->addOrderBy('c.title', \SortDirection::Ascending)
-            ->getQuery()->getResult();
+        return $this->findBy([self::boards()], self::BOARD_ORDER);
     }
+
+    /** @return Category[] the boards a topic may be opened in (not locked), in the order of findBoards() */
+    public function findOpenBoards(): array
+    {
+        return $this->findBy([
+            self::boards(),
+            'locked' => false,
+        ], self::BOARD_ORDER);
+    }
+
+    /** @return Category[] the groups (the categories without a parent), by position then title */
+    public function findGroups(): array
+    {
+        return $this->findBy(['parent' => Key::of(null)], ['position' => 'ASC', 'title' => 'ASC']);
+    }
+
+    /** The boards: a parent, its key compared (`c.parent IS NOT NULL`), no join. */
+    private static function boards(): Group
+    {
+        return Group::of(Parser::SEPARATOR_AND, Criterion::of('parent', Key::of(null), Parser::OPTION_NOT_EQUAL));
+    }
+
+    /** A board's group first, then the board: the path "parent.position" orders by the group's. */
+    private const BOARD_ORDER = ['parent.position' => 'ASC', 'position' => 'ASC', 'title' => 'ASC'];
 
     public function findOneBySlug(string $slug): ?Category
     {

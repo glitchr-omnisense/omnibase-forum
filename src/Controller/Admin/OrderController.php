@@ -6,9 +6,10 @@ use Base\Admin\Context\AdminContext;
 use Base\Admin\Menu\MenuBuilder;
 use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
-use Base\Forum\Entity\Topic;
 use Base\Forum\Repository\CategoryRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Forum\Repository\TopicRepository;
+use Base\Repository\Thread\Tags;
+use Base\Contract\UnitOfWork;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,8 +34,10 @@ class OrderController extends AbstractController
     public const CSRF_TOKEN_ID = 'forum_admin_order';
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
         private readonly CategoryRepository $categories,
+        private readonly TopicRepository $topics,
+        private readonly Tags $tags,
         private readonly TranslatorInterface $translator,
         private readonly AdminContext $adminContext,
         private readonly MenuBuilder $menuBuilder,
@@ -52,7 +55,7 @@ class OrderController extends AbstractController
             $order = $request->request->all('order');
             $this->orderCategories((array) ($order['groups'] ?? []), (array) ($order['boards'] ?? []));
             $this->orderTags((array) ($order['tags'] ?? []));
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
 
             $this->addFlash('success', $this->translator->trans('admin.order.saved', [], 'forum'));
 
@@ -71,10 +74,8 @@ class OrderController extends AbstractController
         return $this->render('@Forum/admin/order.html.twig', [
             'admin_context' => $this->adminContext,
             'groups' => $this->categories->findTree(),
-            'tags' => $this->entityManager->getRepository(Tag::class)->createQueryBuilder('tag')
-                ->orderBy('tag.priority', \SortDirection::Descending)->addOrderBy('tag.slug', \SortDirection::Ascending)
-                ->getQuery()->getResult(),
-            'uses' => $this->tagUses(),
+            'tags' => $tags = $this->tags->findBy([], ['priority' => 'DESC', 'slug' => 'ASC']),
+            'uses' => $this->topics->countPerTag($tags),
         ]);
     }
 
@@ -127,25 +128,11 @@ class OrderController extends AbstractController
         }
 
         $tags = [];
-        foreach ($this->entityManager->getRepository(Tag::class)->findBy(['id' => $ids]) as $tag) {
+        foreach ($this->tags->findBy(['id' => $ids]) as $tag) {
             $tags[$tag->getId()] = $tag;
         }
         foreach ($ids as $index => $id) {
             ($tags[$id] ?? null)?->setPriority((count($ids) - $index) * 10);
         }
-    }
-
-    /** @return array<int, int> tag id => how many topics carry it, so the admin sees what the cloud weighs */
-    private function tagUses(): array
-    {
-        $rows = $this->entityManager->createQueryBuilder()
-            ->select('tag.id AS id, COUNT(t.id) AS nb')
-            ->from(Tag::class, 'tag')
-            ->innerJoin('tag.threads', 't')
-            ->andWhere('t INSTANCE OF ' . Topic::class)
-            ->groupBy('tag.id')
-            ->getQuery()->getScalarResult();
-
-        return array_column(array_map(fn ($row) => ['id' => (int) $row['id'], 'nb' => (int) $row['nb']], $rows), 'nb', 'id');
     }
 }

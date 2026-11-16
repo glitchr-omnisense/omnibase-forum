@@ -19,7 +19,7 @@ use Base\Forum\Security\ForumVoter;
 use Base\Forum\Service\MarkdownRenderer;
 use Base\Service\PaginatorInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -52,21 +52,17 @@ class TopicController extends AbstractController
      */
     public const STREAM_HEADER = 'X-Forum-Stream';
 
-    private readonly TopicRepository $topics;
-    private readonly PostRepository $posts;
-    private readonly CategoryRepository $categories;
-
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
+        private readonly TopicRepository $topics,
+        private readonly PostRepository $posts,
+        private readonly CategoryRepository $categories,
         private readonly PaginatorInterface $paginator,
         private readonly MarkdownRenderer $markdown,
         private readonly TranslatorInterface $translator,
         #[Autowire('%forum.posts_per_page%')] private readonly int $postsPerPage = 10,
         #[Autowire('%forum.flood_interval%')] private readonly int $floodInterval = 15,
     ) {
-        $this->topics = $entityManager->getRepository(Topic::class);
-        $this->posts = $entityManager->getRepository(Post::class);
-        $this->categories = $entityManager->getRepository(Category::class);
     }
 
     /**
@@ -157,8 +153,8 @@ class TopicController extends AbstractController
                 }
                 $topic->schedule($scheduled);
 
-                $this->entityManager->persist($topic);
-                $this->entityManager->flush();
+                $this->unitOfWork->persist($topic);
+                $this->unitOfWork->flush();
 
                 $this->addFlash('success', $topic->isUpcoming()
                     ? $this->translator->trans('@forum.flash.topic_scheduled', ['date' => $this->when($topic->getPublishedAt(), $request->getLocale())])
@@ -188,7 +184,7 @@ class TopicController extends AbstractController
         $this->denyAccessUnlessGranted(ForumVoter::READ, $topic);
 
         $page = $request->query->getInt('page', 1);
-        $posts = $this->paginator->paginate($this->posts->createTopicQuery($topic), $page, $this->postsPerPage);
+        $posts = $this->paginator->paginate($this->posts, $this->posts->ofTopic($topic), PostRepository::READING_ORDER, page: $page, pageSize: $this->postsPerPage);
         $stream = $request->headers->has(self::STREAM_HEADER);
 
         // Readers count, authors do not: a member re-reading their own topic
@@ -291,8 +287,8 @@ class TopicController extends AbstractController
             }
 
             $topic->addPost($post);
-            $this->entityManager->persist($post);
-            $this->entityManager->flush();
+            $this->unitOfWork->persist($post);
+            $this->unitOfWork->flush();
 
             return $this->redirectToPost($post);
         }
@@ -341,9 +337,9 @@ class TopicController extends AbstractController
             try {
                 // All the picks in one flush: a member's vote is whole, or not there.
                 foreach ($choices as $choice) {
-                    $this->entityManager->persist(new PollVote($poll, $this->getUser(), $choice));
+                    $this->unitOfWork->persist(new PollVote($poll, $this->getUser(), $choice));
                 }
-                $this->entityManager->flush();
+                $this->unitOfWork->flush();
                 $this->addFlash('success', $this->translator->trans('@forum.poll.flash.voted'));
             } catch (UniqueConstraintViolationException) {
                 // A second click that arrived with the first: the first one counted.
@@ -421,7 +417,7 @@ class TopicController extends AbstractController
             foreach ($model->tags as $tag) {
                 $topic->addTag($tag);
             }
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
 
             $this->addFlash('success', $this->translator->trans('@forum.flash.topic_updated'));
 
@@ -460,13 +456,13 @@ class TopicController extends AbstractController
             case 'unlock': $topic->setLocked(false); break;
             case 'delete':
                 $category = $topic->getCategory();
-                $this->entityManager->remove($topic);
-                $this->entityManager->flush();
+                $this->unitOfWork->remove($topic);
+                $this->unitOfWork->flush();
                 $this->addFlash('success', $this->translator->trans('@forum.flash.topic_deleted'));
                 return $this->redirectToRoute('forum_category', ['slug' => $category->getSlug()]);
         }
 
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
         $this->addFlash('success', $this->translator->trans('@forum.flash.moderated'));
 
         return $this->redirectToRoute('forum_topic', ['slug' => $topic->getSlug()]);
@@ -504,7 +500,7 @@ class TopicController extends AbstractController
             if ($post->getAuthor() === $this->getUser()) {
                 $post->markEdited();
             }
-            $this->entityManager->flush();
+            $this->unitOfWork->flush();
 
             return $this->redirectToPost($post);
         }
@@ -533,8 +529,8 @@ class TopicController extends AbstractController
             // The opening post IS the topic: deleting it deletes the topic.
             $this->denyAccessUnlessGranted(ForumVoter::EDIT, $topic);
             $category = $topic->getCategory();
-            $this->entityManager->remove($topic);
-            $this->entityManager->flush();
+            $this->unitOfWork->remove($topic);
+            $this->unitOfWork->flush();
             $this->addFlash('success', $this->translator->trans('@forum.flash.topic_deleted'));
 
             return $this->redirectToRoute('forum_category', ['slug' => $category->getSlug()]);
@@ -546,7 +542,7 @@ class TopicController extends AbstractController
         } else {
             $post->delete($this->getUser());
         }
-        $this->entityManager->flush();
+        $this->unitOfWork->flush();
 
         return $this->redirectToPost($post);
     }
@@ -646,14 +642,10 @@ class TopicController extends AbstractController
 
         return $boards;
     }
+
     private function neighbour(Topic $topic, bool $next): ?Topic
     {
-        return $this->topics->whereOut($this->topics->createQueryBuilder('t'))
-            ->andWhere('t.category = :category')->setParameter('category', $topic->getCategory())
-            ->andWhere($next ? 't.id > :id' : 't.id < :id')->setParameter('id', $topic->getId())
-            ->orderBy('t.id', $next ? \SortDirection::Ascending : \SortDirection::Descending)
-            ->setMaxResults(1)
-            ->getQuery()->getOneOrNullResult();
+        return $this->topics->findNeighbour($topic, $next);
     }
 
     /**

@@ -5,7 +5,7 @@ namespace Base\Forum\Entity;
 use App\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * A topic's poll - phpBB's "sondage", which the 2004 BBS had above a topic's

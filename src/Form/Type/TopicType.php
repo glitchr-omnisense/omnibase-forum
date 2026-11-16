@@ -5,7 +5,7 @@ namespace Base\Forum\Form\Type;
 use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
 use Base\Forum\Form\Model\TopicModel;
-use Omnibridge\Symfony\Omnibase\Field\Type\SelectType;
+use Base\Field\Type\SelectType;
 use Base\Forum\Repository\CategoryRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -21,6 +21,7 @@ use Symfony\Component\Validator\Constraints\Length;
 class TopicType extends AbstractType
 {
     public function __construct(
+        private readonly CategoryRepository $categories,
         #[Autowire('%forum.title_max_length%')] private readonly int $titleMaxLength = 120,
         #[Autowire('%forum.content_max_length%')] private readonly int $contentMaxLength = 20000,
     ) {
@@ -66,12 +67,11 @@ class TopicType extends AbstractType
                 'label' => '@forum.form.category',
                 'class' => Category::class,
                 'choice_label' => fn (Category $c) => ($c->getParent() ? $c->getParent()->getTitle() . ' › ' : '') . $c->getTitle(),
-                'query_builder' => fn (CategoryRepository $r) => $r->createQueryBuilder('c')
-                    ->innerJoin('c.parent', 'p')->addSelect('p')
-                    ->andWhere('c.locked = false')
-                    ->orderBy('p.position', \SortDirection::Ascending)->addOrderBy('c.position', \SortDirection::Ascending)->addOrderBy('c.title', \SortDirection::Ascending),
+                // The boards open to new topics (not locked), by group then position, unless the caller
+                // gives its own (the boards the member may post in).
+                'choices' => $options['boards'] ?? $this->categories->findOpenBoards(),
                 'placeholder' => '@forum.form.category_placeholder',
-            ] + (null !== $options['boards'] ? ['choices' => $options['boards']] : []) + [
+            ] + [
                 // Which boards take a poll: forum-poll.js shows the poll section for those only.
                 'choice_attr' => fn (Category $c) => ['data-polls' => $c->allowsPolls() ? '1' : '0'],
             ]);

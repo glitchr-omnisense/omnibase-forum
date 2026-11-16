@@ -6,7 +6,7 @@ use App\Entity\User;
 use Base\Database\Attribute\Timestamp;
 use Base\Forum\Repository\PostRepository;
 use Base\Traits\BaseTrait;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**

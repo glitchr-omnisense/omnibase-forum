@@ -41,9 +41,7 @@ final class SitemapListener
             $sitemap->register('forum_category', ['slug' => $board->getSlug()], $board->getUpdatedAt()?->format('c'));
         }
 
-        $topics = $this->topics->createLatestQuery(array_map(fn (Category $board) => $board->getId(), $public))
-            ->setMaxResults(self::MAX_TOPICS)
-            ->getResult();
+        $topics = $this->topics->findBy($this->topics->latestCriteria(array_map(fn (Category $board) => $board->getId(), $public)), TopicRepository::LATEST_ORDER, self::MAX_TOPICS);
 
         foreach ($topics as $topic) {
             $sitemap->register('forum_topic', ['slug' => $topic->getSlug()], $topic->getActivityAt()?->format('c'));

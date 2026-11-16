@@ -3,7 +3,7 @@
 namespace Base\Forum\Entity;
 
 use App\Entity\User;
-use Doctrine\ORM\Mapping as ORM;
+use Base\Mapping as ORM;
 
 /**
  * One answer a member picked in a poll: one row per answer, so a poll that

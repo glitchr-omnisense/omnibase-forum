@@ -35,9 +35,9 @@ foreach ($candidates as $candidate) {
         }
 
         // Outside a host application (the package installed alone, as its CI does) there is no App\Entity\User:
-        // the core's Base\Entity\User stands in for it, as a site's own User extends it.
+        // a site's own User stands in for it (tests/Fixtures/User.php: the core's Base\Entity\User and its username).
         if (!class_exists('App\Entity\User') && class_exists('Base\Entity\User')) {
-            class_alias('Base\Entity\User', 'App\Entity\User');
+            require_once __DIR__.'/Fixtures/User.php';
         }
 
         return;

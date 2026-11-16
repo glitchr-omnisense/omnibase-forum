@@ -21,6 +21,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class CategoryType extends AbstractType
 {
+    public function __construct(private readonly CategoryRepository $categories)
+    {
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -42,9 +46,7 @@ class CategoryType extends AbstractType
                 'class' => Category::class,
                 'choice_label' => fn (Category $c) => $c->getTitle(),
                 // Groups only: the tree is two levels deep, and a topic lives in a board, never in a group.
-                'query_builder' => fn (CategoryRepository $r) => $r->createQueryBuilder('c')
-                    ->andWhere('c.parent IS NULL')
-                    ->orderBy('c.position', \SortDirection::Ascending)->addOrderBy('c.title', \SortDirection::Ascending),
+                'choices' => $this->categories->findGroups(),
                 'required' => false,
                 'placeholder' => '@forum.form.board_parent_none',
                 'help' => '@forum.form.board_parent_help',

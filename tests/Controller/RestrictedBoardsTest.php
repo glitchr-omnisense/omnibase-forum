@@ -5,7 +5,8 @@ namespace Tests\Base\Forum\Controller;
 use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
 use Base\Forum\Entity\Topic;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Contract\UnitOfWork;
+use Base\Database\Repository\Repositories;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -16,7 +17,8 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class RestrictedBoardsTest extends KernelTestCase
 {
-    private EntityManagerInterface $em;
+    private UnitOfWork $unitOfWork;
+    private Repositories $repositories;
     /** @var list<object> */
     private array $created = [];
     private string $word;
@@ -28,7 +30,8 @@ final class RestrictedBoardsTest extends KernelTestCase
             self::markTestSkipped('Needs a host application kernel.');
         }
         self::bootKernel();
-        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->unitOfWork = static::getContainer()->get(UnitOfWork::class);
+        $this->repositories = static::getContainer()->get(Repositories::class);
         $this->word = 'zq'.bin2hex(random_bytes(3));
 
         $group = new Category('Le club '.$this->word);
@@ -39,32 +42,32 @@ final class RestrictedBoardsTest extends KernelTestCase
             if (method_exists($category, 'setSlug')) {
                 $category->setSlug(strtolower(preg_replace('/\W+/', '-', (string) $category->getTitle())));
             }
-            $this->em->persist($category);
+            $this->unitOfWork->persist($category);
         }
         $tag = new Tag('tag '.$this->word, 'tag-'.$this->word);
-        $this->em->persist($tag);
+        $this->unitOfWork->persist($tag);
 
         foreach ([[$open, 'Sortie publique '.$this->word], [$kept, 'Budget secret '.$this->word]] as [$board, $title]) {
             $topic = new Topic(null, $board, $title);
             $topic->setSlug(strtolower(preg_replace('/\W+/', '-', $title)));
             $topic->addTag($tag);
-            $this->em->persist($topic);
+            $this->unitOfWork->persist($topic);
             $this->created[] = $topic;
         }
-        $this->em->flush();
+        $this->unitOfWork->flush();
         array_push($this->created, $tag, $kept, $open, $group);
-        $this->em->clear(); // the pages read the boards as stored, the group with its children
+        $this->repositories->of(Topic::class)->clear(); // the pages read the boards as stored, the group with its children
     }
 
     protected function tearDown(): void
     {
         $created = array_map(fn (object $entity) => [$entity::class, $entity->getId()], $this->created);
-        $this->em->clear();
+        $this->repositories->of(Topic::class)->clear();
         foreach ($created as [$class, $id]) {
-            $managed = $this->em->find($class, $id);
+            $managed = $this->repositories->of($class)->find($id);
             if ($managed) {
-                $this->em->remove($managed);
-                $this->em->flush();
+                $this->unitOfWork->remove($managed);
+                $this->unitOfWork->flush();
             }
         }
         parent::tearDown();

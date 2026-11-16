@@ -3,7 +3,6 @@
 namespace Base\Forum\Controller\Client;
 
 use Base\Attributes\Attribute\Sitemap;
-use Base\Entity\Thread\Tag;
 use Base\Forum\Entity\Category;
 use Base\Forum\Form\Model\CategoryModel;
 use Base\Forum\Form\Type\CategoryType;
@@ -11,7 +10,8 @@ use Base\Forum\Repository\CategoryRepository;
 use Base\Forum\Repository\TopicRepository;
 use Base\Forum\Security\ForumVoter;
 use Base\Service\PaginatorInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use Base\Repository\Thread\Tags;
+use Base\Contract\UnitOfWork;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,11 +28,11 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class ForumController extends AbstractController
 {
-    private readonly CategoryRepository $categories;
-    private readonly TopicRepository $topics;
-
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly UnitOfWork $unitOfWork,
+        private readonly CategoryRepository $categories,
+        private readonly TopicRepository $topics,
+        private readonly Tags $tags,
         private readonly PaginatorInterface $paginator,
         private readonly TranslatorInterface $translator,
         #[Autowire('%forum.topics_per_page%')] private readonly int $topicsPerPage = 20,
@@ -40,8 +40,6 @@ class ForumController extends AbstractController
         // and with it the board that holds it.
         #[Autowire('%forum.hot_threshold%')] private readonly int $hotThreshold = 25,
     ) {
-        $this->categories = $entityManager->getRepository(Category::class);
-        $this->topics = $entityManager->getRepository(\Base\Forum\Entity\Topic::class);
     }
 
     /**
@@ -123,10 +121,10 @@ class ForumController extends AbstractController
             $sort = self::SORTS[0];
         }
 
-        $query = 'popular' === $sort
-            ? $this->topics->createTrendingQuery($readable)
-            : $this->topics->createLatestQuery($readable);
-        $latest = $this->paginator->paginate($query, $request->query->getInt('page', 1), $this->topicsPerPage);
+        [$criteria, $order] = 'popular' === $sort
+            ? [$this->topics->trendingCriteria($readable), TopicRepository::TRENDING_ORDER]
+            : [$this->topics->latestCriteria($readable), TopicRepository::LATEST_ORDER];
+        $latest = $this->paginator->paginate($this->topics, $criteria, $order, page: $request->query->getInt('page', 1), pageSize: $this->topicsPerPage);
 
         // The view this browser last chose (Display()).
         $view = (string) $request->cookies->get(self::VIEW_COOKIE, self::VIEWS[0]);
@@ -196,7 +194,7 @@ class ForumController extends AbstractController
         }
 
         // Its moderators see what is scheduled on it too, marked as such (_topic_row.html.twig).
-        $topics = $this->paginator->paginate($this->topics->createCategoryQuery($category, $this->isGranted(ForumVoter::SCHEDULE, $category)), $request->query->getInt('page', 1), $this->topicsPerPage);
+        $topics = $this->paginator->paginate($this->topics, $this->topics->categoryCriteria($category, $this->isGranted(ForumVoter::SCHEDULE, $category)), TopicRepository::LIST_ORDER, page: $request->query->getInt('page', 1), pageSize: $this->topicsPerPage);
         if ($rows = $this->streamRows($request, $topics, false)) {
             return $rows;
         }
@@ -238,12 +236,12 @@ class ForumController extends AbstractController
             $category->setDescription(trim((string) $model->description) ?: null);
             $category->setAnnouncement($model->announcement);
             $category->setPolls($model->polls);
-            $siblings = $category->getParent()?->getChildren()->toArray() ?? $this->categories->findBy(['parent' => null]);
+            $siblings = $category->getParent()?->getChildren()->toArray() ?? $this->categories->findGroups();
             // Tens, as the order page numbers them (OrderController): room to slot one in between later.
             $category->setPosition(10 + max([0, ...array_map(fn (Category $c) => $c->getPosition(), $siblings)]));
 
-            $this->entityManager->persist($category);
-            $this->entityManager->flush();
+            $this->unitOfWork->persist($category);
+            $this->unitOfWork->flush();
 
             $this->addFlash('success', $this->translator->trans($category->isGroup() ? '@forum.flash.group_created' : '@forum.flash.board_created', ['title' => $category->getTitle()]));
 
@@ -278,12 +276,12 @@ class ForumController extends AbstractController
     #[Route('/bbs/t/{slug}', name: 'forum_tag')]
     public function Tag(Request $request, string $slug): Response
     {
-        $tag = $this->entityManager->getRepository(Tag::class)->findOneBy(['slug' => $slug]);
+        $tag = $this->tags->findOneBy(['slug' => $slug]);
         if (!$tag) {
             throw $this->createNotFoundException('Unknown tag.');
         }
 
-        $topics = $this->paginator->paginate($this->topics->createTagQuery($tag, $this->readableBoards()), $request->query->getInt('page', 1), $this->topicsPerPage);
+        $topics = $this->paginator->paginate($this->topics, $this->topics->tagCriteria($tag, $this->readableBoards()), TopicRepository::LIST_ORDER, page: $request->query->getInt('page', 1), pageSize: $this->topicsPerPage);
         if ($rows = $this->streamRows($request, $topics, true)) {
             return $rows;
         }
@@ -302,7 +300,7 @@ class ForumController extends AbstractController
         $topics = null;
 
         if (mb_strlen($term) >= 3) {
-            $topics = $this->paginator->paginate($this->topics->createSearchQuery($term, $this->readableBoards()), $request->query->getInt('page', 1), $this->topicsPerPage);
+            $topics = $this->paginator->paginate($this->topics, $this->topics->searchCriteria($term, $this->readableBoards()), TopicRepository::LIST_ORDER, page: $request->query->getInt('page', 1), pageSize: $this->topicsPerPage);
             if ($rows = $this->streamRows($request, $topics, true)) {
                 return $rows;
             }
